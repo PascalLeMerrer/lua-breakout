@@ -4,6 +4,7 @@ io.stdout:setvbuf('no')
 if arg[#arg] == "-debug" then require("mobdebug").start() end
 
 require('constants')
+require('ball')
 
 local racket
 local bricks
@@ -17,19 +18,19 @@ local font
 
 function love.load()
   math.randomseed(love.timer.getTime())
-  
+
   soundBrick = love.audio.newSource(PATH_SOUND_BRICK, "static")
   soundRacket = love.audio.newSource(PATH_SOUND_RACKET, "static")
-  
+
   font = love.graphics.newFont(32)
   love.graphics.setFont(font)
-  
+
   initializeWindow()
   initializeRacket()
   initializeBricks()
   initializeLives()
-  initializeBall(racket.height, racket.y)
-
+  ball = Ball(racket)
+  
 end
 
 function initializeWindow()
@@ -38,8 +39,6 @@ function initializeWindow()
   love.window.setIcon(imgIcon:getData())
   love.window.setMode(WIN_WIDTH, WIN_HEIGHT)
 end
-
-
 
 function initializeLives()
   lives = {}
@@ -70,14 +69,14 @@ end
 
 function initializeBricks()
 
-    bricks = {} -- Initialisation variable pour les briques
-    for line=1, BRICKS_PER_COLUMN do
-      table.insert(bricks, {}) -- Ajout d'une ligne
-      for column=1, BRICKS_PER_LINE do
-        local brick = createBrick(line, column)
-        table.insert(bricks[line], brick) -- Ajout d'une brique par colonne de la ligne
-      end
+  bricks = {} -- Initialisation variable pour les briques
+  for line=1, BRICKS_PER_COLUMN do
+    table.insert(bricks, {}) -- Ajout d'une ligne
+    for column=1, BRICKS_PER_LINE do
+      local brick = createBrick(line, column)
+      table.insert(bricks[line], brick) -- Ajout d'une brique par colonne de la ligne
     end
+  end
 
 end
 
@@ -89,15 +88,6 @@ function initializeLives()
   lives.width, lives.height = lives.img:getDimensions()
 
 end
-
-function initializeBall(racketHeight, racketY)
-
-  ball = {}
-  ball.width, ball.height = racketHeight * 0.75, racketHeight * 0.75
-  resetBall(racket.y)
-
-end
-
 
 function love.update(dt)  
   if currentPage == PAGE_BEGINNING then
@@ -112,12 +102,15 @@ end
 
 function updateRound(dt)
   updateRacket(dt)
-  updateBall(dt)
-  
+  local isBallInGame = ball:update(dt, racket)
+  if not isBallInGame then
+    lives.count = lives.count - 1
+  end
+
   if collideRect(ball, racket) then
     collisionBallWithRacket() -- Collision entre la balle et la raquette
   end
-  
+
   for line=#bricks, 1, -1 do
     for column=#bricks[line], 1, -1 do
       if bricks[line][column].isNotBroken and collideRect(ball, bricks[line][column]) then
@@ -125,73 +118,45 @@ function updateRound(dt)
       end
     end
   end
-  
+
   if lives.count == 0 or nbBricks == 0 then
     currentPage = PAGE_END
   end
-  
+
 end
 
 
 function updateRacket(dt)
   if love.keyboard.isDown('left', 'q') and racket.x > 0 then
-      racket.x = racket.x - (racket.speedX*dt)
-  -- Mouvement vers la droite
+    racket.x = racket.x - (racket.speedX*dt)
+    -- Mouvement vers la droite
   elseif love.keyboard.isDown('right', 'd') and racket.x + racket.width < WIN_WIDTH then
-      racket.x = racket.x + (racket.speedX*dt)
+    racket.x = racket.x + (racket.speedX*dt)
   end
-end
-
-function updateBall(dt)
-  
-  ball.x = ball.x + ball.speedX * dt
-  ball.y = ball.y + ball.speedY * dt
-
-  if ball.x + ball.width >= WIN_WIDTH then  -- Bordure droite
-    ball.speedX = -ball.speedX
-  elseif ball.x <= 0 then -- Bordure gauche
-    ball.speedX = -ball.speedX
-  end
-
-  if ball.y <= 0 then  -- Bordure haut
-    ball.speedY = -ball.speedY
-  elseif ball.y + ball.height >= WIN_HEIGHT then -- Bordure bas
-    lives.count = lives.count - 1
-    resetBall(racket.y)
-  end
-end
-
-function resetBall(racketY)
-
-  ball.speedY = -DEFAULT_SPEED_BY -- Vitesse verticale
-  ball.speedX = math.random(-DEFAULT_SPEED_BX, DEFAULT_SPEED_BX) -- Vitesse horizontale
-  ball.x = WIN_WIDTH / 2 - ball.width / 2 -- Position en abscisse
-  ball.y = racketY - 2 * ball.height - ball.height / 2 -- Position en ordonnée
-
 end
 
 function collisionBallWithRacket()
-  
-    soundRacket:play()
 
-    -- Collision par la gauche (coin haut inclus)
-    if ball.x < racket.x + 1/8 * racket.width and ball.speedX >= 0 then
-      if ball.speedX <= DEFAULT_SPEED_BX/2 then -- Si vitesse trop faible
-        ball.speedX = -math.random(0.75*DEFAULT_SPEED_BX, DEFAULT_SPEED_BX) -- Nouvelle vitesse
-      else
-        ball.speedX = -ball.speedX
-      end
-    -- Collision par la droite (coin haut inclus)
-    elseif ball.x > racket.x + 7/8 * racket.width and ball.speedX <= 0 then
-      if ball.speedX >= -DEFAULT_SPEED_BX/2 then  -- Si vitesse trop faible
-        ball.speedX = math.random(0.75*DEFAULT_SPEED_BX, DEFAULT_SPEED_BX) -- Nouvelle vitesse
-      else 
-        ball.speedX = -ball.speedX
-      end
+  soundRacket:play()
+
+  -- Collision par la gauche (coin haut inclus)
+  if ball.x < racket.x + 1/8 * racket.width and ball.speedX >= 0 then
+    if ball.speedX <= DEFAULT_SPEED_BX/2 then -- Si vitesse trop faible
+      ball.speedX = -math.random(0.75*DEFAULT_SPEED_BX, DEFAULT_SPEED_BX) -- Nouvelle vitesse
+    else
+      ball.speedX = -ball.speedX
     end
-    -- Collision par le haut
-    if ball.y < racket.y and ball.speedY > 0 then
-      ball.speedY = -ball.speedY
+    -- Collision par la droite (coin haut inclus)
+  elseif ball.x > racket.x + 7/8 * racket.width and ball.speedX <= 0 then
+    if ball.speedX >= -DEFAULT_SPEED_BX/2 then  -- Si vitesse trop faible
+      ball.speedX = math.random(0.75*DEFAULT_SPEED_BX, DEFAULT_SPEED_BX) -- Nouvelle vitesse
+    else 
+      ball.speedX = -ball.speedX
+    end
+  end
+  -- Collision par le haut
+  if ball.y < racket.y and ball.speedY > 0 then
+    ball.speedY = -ball.speedY
   end
 
 end
@@ -199,18 +164,18 @@ end
 function collisionBallWithBrick(ball, brick)
 
   soundBrick:play()
-  
+
   -- Collision côté gauche brique
   if ball.x < brick.x and ball.speedX > 0 then
-      ball.speedX = -ball.speedX
-  -- Collision côté droit brique
+    ball.speedX = -ball.speedX
+    -- Collision côté droit brique
   elseif ball.x > brick.x + brick.width and ball.speedX < 0 then
-      ball.speedX = -ball.speedX
+    ball.speedX = -ball.speedX
   end
   -- collision haut brique
   if ball.y < brick.y and ball.speedY > 0 then
     ball.speedY = -ball.speedY
-  -- Collision bas brique
+    -- Collision bas brique
   elseif ball.y > brick.y and ball.speedY < 0 then
     ball.speedY = -ball.speedY
   end
@@ -228,7 +193,7 @@ function love.draw()
     drawRacket()
     drawBricks()
     drawLives()
-    drawBall()
+    ball:draw()
   elseif currentPage == PAGE_END then
     local message = "Victoire !"
     if lives.count == 0 then
@@ -237,7 +202,7 @@ function love.draw()
     love.graphics.printf(message, 0, 0.25*WIN_HEIGHT, WIN_WIDTH, "center") -- Écriture
     love.graphics.printf("Appuyez sur 'R' pour recommencer", 0, 0.45*WIN_HEIGHT, WIN_WIDTH, "center")
   end
-  
+
 
 end
 
@@ -264,27 +229,23 @@ function drawLives()
   end
 end
 
-function drawBall()
-  love.graphics.rectangle('fill', ball.x, ball.y, ball.width, ball.height)
-end
-
 function love.keypressed(key)
   if key == "r" then
-      if currentPage ~= PAGE_BEGINNING then
+    if currentPage ~= PAGE_BEGINNING then
 
-        resetRacket() 
-        
-        for line=1, #bricks do
-          for column=1, #bricks[line] do
-            bricks[line][column].isNotBroken = true
-          end
+      resetRacket() 
+
+      for line=1, #bricks do
+        for column=1, #bricks[line] do
+          bricks[line][column].isNotBroken = true
         end
-
-        lives.count = NB_LIVES -- Réinitialisation des vies
-        nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE -- Réinitialisation du nombre de briques
-        resetBall(racket.y) -- Réinitialisation de la balle
-
       end
+
+      lives.count = NB_LIVES -- Réinitialisation des vies
+      nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE -- Réinitialisation du nombre de briques
+      resetBall(racket.y) -- Réinitialisation de la balle
+
+    end
     currentPage = PAGE_ROUND -- Page jeu
   end
 
