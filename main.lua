@@ -3,9 +3,13 @@ io.stdout:setvbuf('no')
 
 if arg[#arg] == "-debug" then require("mobdebug").start() end
 
+-- NOTE: invoking a class method with a single dot causes stranges issues
+--       remember to use colon (object:method(...) )
+
 require('constants')
 require('racket')
 require('ball')
+require('brick')
 
 local racket
 local bricks
@@ -31,7 +35,7 @@ function love.load()
   initializeBricks()
   initializeLives()
   ball = Ball(racket)
-  
+
 end
 
 function initializeWindow()
@@ -48,26 +52,14 @@ function initializeLives()
   lives.width, lives.height = lives.img:getDimensions() 
 end
 
-function createBrick(line, column)
-
-  local brick = {}
-  brick.isNotBroken = true
-  brick.width = WIN_WIDTH / BRICKS_PER_LINE - 5 
-  brick.height = WIN_HEIGHT / 35
-  brick.x = 2.5 + (column-1) * (5+brick.width)
-  brick.y = line * (WIN_HEIGHT/35+2.5)
-  return brick
-
-end
-
 function initializeBricks()
 
-  bricks = {} -- Initialisation variable pour les briques
+  bricks = {} 
   for line=1, BRICKS_PER_COLUMN do
-    table.insert(bricks, {}) -- Ajout d'une ligne
+    table.insert(bricks, {})
     for column=1, BRICKS_PER_LINE do
-      local brick = createBrick(line, column)
-      table.insert(bricks[line], brick) -- Ajout d'une brique par colonne de la ligne
+      local brick = Brick(line, column)
+      table.insert(bricks[line], brick)
     end
   end
 
@@ -88,8 +80,6 @@ function love.update(dt)
     love.graphics.printf("Appuyez sur 'R' pour commencer", 0, 0.45*WIN_HEIGHT, WIN_WIDTH, "center") 
   elseif currentPage == PAGE_ROUND then
     updateRound(dt)
-  elseif currentPage == PAGE_END then
-    -- Traitement page fin
   end
 end
 
@@ -104,7 +94,7 @@ function updateRound(dt)
     collisionBallWithRacket() -- Collision entre la balle et la raquette
   end
 
-  for line=#bricks, 1, -1 do
+  for line = #bricks, 1, -1 do
     for column=#bricks[line], 1, -1 do
       if bricks[line][column].isNotBroken and collideRect(ball, bricks[line][column]) then
         collisionBallWithBrick(ball, bricks[line][column]) -- Collision entre la balle et une brique
@@ -185,17 +175,13 @@ function love.draw()
     love.graphics.printf(message, 0, 0.25*WIN_HEIGHT, WIN_WIDTH, "center") -- Écriture
     love.graphics.printf("Appuyez sur 'R' pour recommencer", 0, 0.45*WIN_HEIGHT, WIN_WIDTH, "center")
   end
-
-
 end
 
 function drawBricks()
   for line=1, #bricks do 
     for column=1, #bricks[line] do
       local brick = bricks[line][column]
-      if brick.isNotBroken then
-        love.graphics.rectangle('fill', brick.x, brick.y, brick.width, brick.height)
-      end
+      brick:draw()
     end
   end
 end
