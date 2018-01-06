@@ -4,6 +4,7 @@ io.stdout:setvbuf('no')
 if arg[#arg] == "-debug" then require("mobdebug").start() end
 
 require('constants')
+require('racket')
 require('ball')
 
 local racket
@@ -26,7 +27,7 @@ function love.load()
   love.graphics.setFont(font)
 
   initializeWindow()
-  initializeRacket()
+  racket = Racket()
   initializeBricks()
   initializeLives()
   ball = Ball(racket)
@@ -45,14 +46,6 @@ function initializeLives()
   lives.count = NB_LIVES
   lives.img = love.graphics.newImage(PATH_LIFE)
   lives.width, lives.height = lives.img:getDimensions() 
-end
-
-function initializeRacket()
-  racket = {}
-  racket.speedX = 215
-  racket.width = WIN_WIDTH / 4
-  racket.height = WIN_HEIGHT / 37
-  resetRacket()
 end
 
 function createBrick(line, column)
@@ -101,7 +94,7 @@ function love.update(dt)
 end
 
 function updateRound(dt)
-  updateRacket(dt)
+  racket:update(dt)
   local isBallInGame = ball:update(dt, racket)
   if not isBallInGame then
     lives.count = lives.count - 1
@@ -123,16 +116,6 @@ function updateRound(dt)
     currentPage = PAGE_END
   end
 
-end
-
-
-function updateRacket(dt)
-  if love.keyboard.isDown('left', 'q') and racket.x > 0 then
-    racket.x = racket.x - (racket.speedX*dt)
-    -- Mouvement vers la droite
-  elseif love.keyboard.isDown('right', 'd') and racket.x + racket.width < WIN_WIDTH then
-    racket.x = racket.x + (racket.speedX*dt)
-  end
 end
 
 function collisionBallWithRacket()
@@ -190,7 +173,7 @@ function love.draw()
     love.graphics.printf("Casse-briques", 0, 0.25*WIN_HEIGHT, WIN_WIDTH, "center") -- Écriture
     love.graphics.printf("Appuyez sur 'R' pour commencer", 0, 0.45*WIN_HEIGHT, WIN_WIDTH, "center") 
   elseif currentPage == PAGE_ROUND then
-    drawRacket()
+    racket:draw()
     drawBricks()
     drawLives()
     ball:draw()
@@ -204,11 +187,6 @@ function love.draw()
   end
 
 
-end
-
-function drawRacket()
-  love.graphics.setColor(255, 255, 255)
-  love.graphics.rectangle('fill', racket.x, racket.y, racket.width, racket.height)
 end
 
 function drawBricks()
@@ -233,7 +211,7 @@ function love.keypressed(key)
   if key == "r" then
     if currentPage ~= PAGE_BEGINNING then
 
-      resetRacket() 
+      racket:reset() 
 
       for line=1, #bricks do
         for column=1, #bricks[line] do
@@ -243,7 +221,7 @@ function love.keypressed(key)
 
       lives.count = NB_LIVES -- Réinitialisation des vies
       nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE -- Réinitialisation du nombre de briques
-      resetBall(racket.y) -- Réinitialisation de la balle
+      ball:reset(racket.y) -- Réinitialisation de la balle
 
     end
     currentPage = PAGE_ROUND -- Page jeu
@@ -252,9 +230,4 @@ function love.keypressed(key)
   if key == "escape" then
     love.event.quit() -- Pour quitter le jeu
   end
-end
-
-function resetRacket()
-  racket.x = (WIN_WIDTH-racket.width) / 2 -- Position en abscisse
-  racket.y = WIN_HEIGHT - 64 -- Position en ordonnée
 end
