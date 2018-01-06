@@ -10,10 +10,11 @@ require('constants')
 require('racket')
 require('ball')
 require('brick')
+require('lifecounter')
 
 local racket
 local bricks
-local lives
+local lifeCounter
 local ball
 local nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE
 local soundBrick  
@@ -33,7 +34,7 @@ function love.load()
   initializeWindow()
   racket = Racket()
   initializeBricks()
-  initializeLives()
+  lifeCounter = LifeCounter()
   ball = Ball(racket)
 
 end
@@ -43,13 +44,6 @@ function initializeWindow()
   local imgIcon = love.graphics.newImage(ICON_PATH) 
   love.window.setIcon(imgIcon:getData())
   love.window.setMode(WIN_WIDTH, WIN_HEIGHT)
-end
-
-function initializeLives()
-  lives = {}
-  lives.count = NB_LIVES
-  lives.img = love.graphics.newImage(PATH_LIFE)
-  lives.width, lives.height = lives.img:getDimensions() 
 end
 
 function initializeBricks()
@@ -62,15 +56,6 @@ function initializeBricks()
       table.insert(bricks[line], brick)
     end
   end
-
-end
-
-function initializeLives()
-
-  lives = {}
-  lives.count = NB_LIVES 
-  lives.img = love.graphics.newImage(PATH_LIFE) 
-  lives.width, lives.height = lives.img:getDimensions()
 
 end
 
@@ -87,7 +72,7 @@ function updateRound(dt)
   racket:update(dt)
   local isBallInGame = ball:update(dt, racket)
   if not isBallInGame then
-    lives.count = lives.count - 1
+    lifeCounter:decrease()
   end
 
   if collideRect(ball, racket) then
@@ -102,7 +87,7 @@ function updateRound(dt)
     end
   end
 
-  if lives.count == 0 or nbBricks == 0 then
+  if lifeCounter.count == 0 or nbBricks == 0 then
     currentPage = PAGE_END
   end
 
@@ -165,11 +150,11 @@ function love.draw()
   elseif currentPage == PAGE_ROUND then
     racket:draw()
     drawBricks()
-    drawLives()
+    lifeCounter:draw()
     ball:draw()
   elseif currentPage == PAGE_END then
     local message = "Victoire !"
-    if lives.count == 0 then
+    if lifeCounter.count == 0 then
       message = "Défaite !"
     end
     love.graphics.printf(message, 0, 0.25*WIN_HEIGHT, WIN_WIDTH, "center") -- Écriture
@@ -186,13 +171,6 @@ function drawBricks()
   end
 end
 
-function drawLives()
-  for i=0, lives.count-1 do
-    local posX = 5 + i * 1.20 * lives.width
-    love.graphics.draw(lives.img, posX, WIN_HEIGHT-lives.height)
-  end
-end
-
 function love.keypressed(key)
   if key == "r" then
     if currentPage ~= PAGE_BEGINNING then
@@ -205,7 +183,7 @@ function love.keypressed(key)
         end
       end
 
-      lives.count = NB_LIVES -- Réinitialisation des vies
+      lifeCounter.count = NB_LIVES -- Réinitialisation des vies
       nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE -- Réinitialisation du nombre de briques
       ball:reset(racket.y) -- Réinitialisation de la balle
 
