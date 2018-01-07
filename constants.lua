@@ -1,7 +1,7 @@
-TITLE = "Casse-briques" -- Titre
-ICON_PATH = "images/icon.png" -- Chemin image icône
-WIN_WIDTH = 480 -- Largeur fenêtre
-WIN_HEIGHT = 640 -- Hauteur fenêtre
+TITLE = "Casse-briques"
+ICON_PATH = "images/icon.png"
+WIN_WIDTH = 480
+WIN_HEIGHT = 640
 BRICKS_PER_LINE = 7
 BRICKS_PER_COLUMN = 3 
 NB_LIVES = 3 -- Nombre de vies initiales
@@ -12,3 +12,6 @@ PATH_SOUND_BRICK = "sounds/collision_brick.wav"
 PATH_SOUND_RACKET = "sounds/collision_racket.wav"
 
 SWITCH_SIGNAL = "switch"
+BALL_OUT_SIGNAL = "ball out"
+
+RACKET_VELOCITY_X = 215

@@ -1,17 +1,22 @@
-Class = require "hump.class"
+local brickWidth = WIN_WIDTH / BRICKS_PER_LINE - 5 
+local brickHeight = WIN_HEIGHT / 35
 
-Brick = Class {
-  init = function(self, line, column)
-    self.isNotBroken = true
-    self.width = WIN_WIDTH / BRICKS_PER_LINE - 5 
-    self.height = WIN_HEIGHT / 35
-    self.x = 2.5 + (column - 1) * (5 + self.width)
-    self.y = line * (WIN_HEIGHT / 35 + 2.5)
-  end
-}
 
-function Brick:draw()
-  if self.isNotBroken then
-    love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
+function createBrick (line, column)
+  local x = 2.5 + (column - 1) * (5 + brickWidth)
+  local y = line * (WIN_HEIGHT / 35 + 2.5)
+
+  local brick = HC.rectangle(x, y, brickWidth, brickHeight)
+  brick.x = x
+  brick.y = y
+  brick.width = brickWidth
+  brick.height = brickHeight
+  brick.isNotBroken = true
+  return brick
+end
+
+function drawBrick(brick)
+  if brick.isNotBroken then
+    brick:draw('fill')
   end
 end

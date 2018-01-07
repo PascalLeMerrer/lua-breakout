@@ -11,19 +11,17 @@ require('racket')
 require('ball')
 require('brick')
 require('lifecounter')
-require('collisionhelper')
 Gamestate = require "hump.gamestate"
 Signal = require 'hump.signal'
 require('states.menustate')
 require('states.gamestate')
 require('states.endstate')
+require('debugTable')
 
 local font
 
 bricks = {} 
-nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE
-racket = Racket() 
-ball = Ball(racket)
+nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE 
 lifeCounter = LifeCounter()
 
 function love.load()
@@ -33,7 +31,7 @@ function love.load()
   love.graphics.setFont(font)
 
   initializeWindow()
-
+  
   Gamestate.registerEvents()
   Gamestate.switch(menuState)
 
@@ -58,7 +56,7 @@ function initializeBricks()
   for line=1, BRICKS_PER_COLUMN do
     table.insert(bricks, {})
     for column=1, BRICKS_PER_LINE do
-      local brick = Brick(line, column)
+      local brick = createBrick(line, column)
       table.insert(bricks[line], brick)
     end
   end
@@ -69,7 +67,7 @@ function drawBricks()
   for line=1, #bricks do 
     for column=1, #bricks[line] do
       local brick = bricks[line][column]
-      brick:draw()
+      drawBrick(brick)
     end
   end
 end
@@ -88,7 +86,7 @@ function love.keypressed(key)
 end
 
 function resetGame()
-  racket:reset() 
+  resetRacket() 
 
   for line=1, #bricks do
     for column=1, #bricks[line] do
@@ -98,5 +96,5 @@ function resetGame()
 
   lifeCounter.count = NB_LIVES
   nbBricks = BRICKS_PER_COLUMN * BRICKS_PER_LINE
-  ball:reset(racket.y)
+  resetBall()
 end

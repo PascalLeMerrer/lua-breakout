@@ -1,3 +1,6 @@
 [submodule "hump"]
 	path = hump
 	url = git://github.com/vrld/hump
+[submodule "hc"]
+	path = hc
+	url = https://github.com/vrld/HC

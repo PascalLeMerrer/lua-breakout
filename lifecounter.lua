@@ -5,8 +5,13 @@ LifeCounter = Class {
     self.count = NB_LIVES 
     self.img = love.graphics.newImage(PATH_LIFE) 
     self.width, self.height = self.img:getDimensions()
+    Signal.register(BALL_OUT_SIGNAL, decrease)
   end
 }
+
+function decrease()
+  lifeCounter.decrease(lifeCounter)
+end
 
 function LifeCounter:decrease()
   self.count = self.count - 1

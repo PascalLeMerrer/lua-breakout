@@ -1,34 +1,31 @@
 gameState = {}
 
+HC = require 'hc'
+
+racket = nil
+
+function gameState:enter()
+  Collider = HC.new(100)
+  topBorder = HC.rectangle(0, -100, WIN_WIDTH, 100) -- x, y, width, height
+  bottomBorder = HC.rectangle(0, WIN_HEIGHT, WIN_WIDTH, 100)
+  leftBorder = HC.rectangle(-100, 0, 100, WIN_HEIGHT)
+  rightBorder = HC.rectangle(WIN_WIDTH, 0, 100, WIN_HEIGHT)
+  createRacket()
+  createBall()
+end
+
 function gameState:update(dt)
-  racket:update(dt)
-  local isBallInGame = ball:update(dt, racket)
-  if not isBallInGame then
-    lifeCounter:decrease()
-  end
-
-  if collideRect(ball, racket) then
-    collisionBallWithRacket() -- Collision entre la balle et la raquette
-  end
-
-  for line = #bricks, 1, -1 do
-    for column=#bricks[line], 1, -1 do
-      if bricks[line][column].isNotBroken and collideRect(ball, bricks[line][column]) then
-        collisionBallWithBrick(ball, bricks[line][column]) -- Collision entre la balle et une brique
-      end
-    end
-  end
-
+  updateRacket(dt)
+  updateBall(dt)
   if lifeCounter.count == 0 or nbBricks == 0 then
     Signal.emit(SWITCH_SIGNAL, endState)
   end
 
 end
 
-
 function gameState.draw()
-  racket:draw()
+  drawRacket()
   drawBricks()
   lifeCounter:draw()
-  ball:draw()
+  drawBall()
 end
