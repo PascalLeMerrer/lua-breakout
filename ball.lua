@@ -11,6 +11,10 @@ function createBall()
   ball.startX = startX
   ball.startY = startY
 
+  ball.image = love.graphics.newImage('images/ballYellow.png') 
+
+  ball.imageScale =  (radius * 4) / ball.image:getWidth()
+  print(radius , ball.image:getWidth(), ball.imageScale)
   resetBall()
 
 end
@@ -100,20 +104,15 @@ function collideBallWithBrick(brick)
 
 end
 
-
-
-
 function getBallX()
-  return ball._center.x - ball._radius / 2
+  return ball._center.x - ball._radius
 
 end
 
 function getBallY()
-  return ball._center.y - ball._radius / 2
+  return ball._center.y - ball._radius
 end
 
-
-
 function drawBall()
-  ball:draw('fill', 16)
+  love.graphics.draw(ball.image, getBallX(), getBallY(), 0, ball.imageScale, ball.imageScale)
 end

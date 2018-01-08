@@ -14,6 +14,12 @@ function createRacket()
   racket.width = width
   racket.velocity = {x = 0, y = 0}
   Signal.register(BALL_OUT_SIGNAL, resetRacket)
+
+  racket.image = love.graphics.newImage('images/paddle.png') 
+  racket.imageWidthScale = racket.width / racket.image:getWidth()
+  racket.imageHeightScale = racket.height / racket.image:getHeight()
+  
+  displayTable(racket)
 end
 
 function resetRacket()
@@ -35,14 +41,25 @@ function updateRacket(dt)
 end
 
 function drawRacket()
-  love.graphics.setColor(255, 255, 255)
-  racket:draw('fill')
+  love.graphics.draw(racket.image, getRacketX(), getRacketY(), 0, racket.imageWidthScale, racket.imageHeightScale)
 end
 
 function getRacketX()
-  return racket._polygon.vertices[1].x
+  local min = math.huge
+  for index, vertex in ipairs(racket._polygon.vertices) do
+    if vertex.x < min then
+      min = vertex.x
+    end
+  end
+  return min
 end
 
 function getRacketY()
-  return racket._polygon.vertices[1].y
+  local min = math.huge
+  for index, vertex in ipairs(racket._polygon.vertices) do
+    if vertex.y < min then
+      min = vertex.y
+    end
+  end
+  return min
 end

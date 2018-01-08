@@ -12,11 +12,14 @@ function createBrick (line, column)
   brick.width = brickWidth
   brick.height = brickHeight
   brick.isNotBroken = true
+  brick.image = love.graphics.newImage('images/tileBlue.png') 
+  brick.imageWidthScale = brick.width / brick.image:getWidth()
+  brick.imageHeightScale = brick.height / brick.image:getHeight()
   return brick
 end
 
 function drawBrick(brick)
   if brick.isNotBroken then
-    brick:draw('fill')
+    love.graphics.draw(brick.image, brick.x, brick.y, 0, brick.imageWidthScale, brick.imageHeightScale)
   end
 end
