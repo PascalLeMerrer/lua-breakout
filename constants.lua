@@ -13,5 +13,6 @@ PATH_SOUND_RACKET = "sounds/collision_racket.wav"
 
 SWITCH_SIGNAL = "switch"
 BALL_OUT_SIGNAL = "ball out"
+START_SIGNAL = 'start'
 
 RACKET_VELOCITY_X = 215

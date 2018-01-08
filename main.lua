@@ -31,7 +31,7 @@ function love.load()
   love.graphics.setFont(font)
 
   initializeWindow()
-  
+
   Gamestate.registerEvents()
   Gamestate.switch(menuState)
 
@@ -41,6 +41,8 @@ function love.load()
       Gamestate.switch(state)
     end
   )
+  
+  Signal.register(START_SIGNAL, startGame)
 
 end
 
@@ -74,15 +76,19 @@ end
 
 function love.keypressed(key)
   if key == "r" then
-    if Gamestate.current() ~= gameState then
-      resetGame()
-    end
-    Signal.emit(SWITCH_SIGNAL, gameState)
+    startGame()
   end
 
   if key == "escape" then
     love.event.quit() -- Pour quitter le jeu
   end
+end
+
+function startGame()
+  if Gamestate.current() ~= gameState then
+    resetGame()
+  end
+  Signal.emit(SWITCH_SIGNAL, gameState) 
 end
 
 function resetGame()
